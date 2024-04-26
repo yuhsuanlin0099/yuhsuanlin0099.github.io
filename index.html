@@ -10,7 +10,7 @@
     <audio controls src="./GI-DLE-SuperLady.mp3" id="myAudio"></audio>
     <script>
       let audio = document.getElementById("myAudio");
-      let isPlaying = false;
+      //let isPlaying = false;
 
       if (window.DeviceOrientationEvent) {
         window.addEventListener("deviceorientation", handleOrientation, true);
@@ -29,10 +29,10 @@
         // 當 beta 角度超過一定範圍時，播放音樂
         if (beta > 0 && beta < 90 && !isPlaying) {
           audio.play();
-          isPlaying = true;
+          //isPlaying = true;
         } else if (beta >= 90 && isPlaying) {
           audio.pause();
-          isPlaying = false;
+          //isPlaying = false;
         }
       }
       audio.addEventListener("play", function () {
