@@ -3,26 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gyroscope Example</title>
+    <title>控制陀螺儀</title>
   </head>
   <body>
-    <h1>Gyroscope Example</h1>
-    <div id="gyro-data">
-      <p>Alpha: <span id="alpha"></span></p>
-      <p>Beta: <span id="beta"></span></p>
-      <p>Gamma: <span id="gamma"></span></p>
-    </div>
+    <div id="orientationData"></div>
 
     <script>
-      window.addEventListener("deviceorientation", function (event) {
-        var alpha = event.alpha;
-        var beta = event.beta;
-        var gamma = event.gamma;
+      if (window.DeviceOrientationEvent) {
+        window.addEventListener("deviceorientation", handleOrientation, true);
+      } else {
+        document.getElementById("orientationData").innerText =
+          "您的瀏覽器不支持陀螺儀功能";
+      }
 
-        document.getElementById("alpha").textContent = alpha;
-        document.getElementById("beta").textContent = beta;
-        document.getElementById("gamma").textContent = gamma;
-      });
+      function handleOrientation(event) {
+        var alpha = event.alpha; // 左右傾斜角度（0-360）
+        var beta = event.beta; // 前後傾斜角度（-180-180）
+        var gamma = event.gamma; // 扭轉角度（-90-90）
+
+        document.getElementById("orientationData").innerText = `
+        Alpha: ${alpha.toFixed(2)}\xB0\n
+        Beta: ${beta.toFixed(2)}\xB0\n
+        Gamma: ${gamma.toFixed(2)}\xB0
+      `;
+
+        // 在這裡你可以根據陀螺儀數據做出相應的操作
+      }
     </script>
   </body>
 </html>
