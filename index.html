@@ -26,9 +26,10 @@
       `;
 
         // 當 beta 角度超過一定範圍時，播放音樂
-        if (beta > 45) {
+        if (beta > 51 && beta < 129) {
+          audio.currentTime = 0;
           audio.play();
-        } else if (beta <= 45) {
+        } else if (beta <= 50 || beta >= 130) {
           audio.pause();
         }
       }
