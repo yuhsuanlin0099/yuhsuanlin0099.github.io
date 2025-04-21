@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>VCD Interactive Art</title>
+    <link href="./favicon-32x32.png" rel="icon" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: black;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      let detector,
+        poses = [];
+      let video;
+      let points = [];
+      const spacing = 18;
+      let logoFont;
+      let fallSpeed = 0.5;
+      let trails = []; // 拖尾粒子
+      let logoImage;
+
+      function preload() {
+        logoFont = loadFont(
+          "https://cdnjs.cloudflare.com/ajax/libs/topcoat/0.8.0/font/SourceCodePro-Light.otf"
+        );
+        logoImage = loadImage("logoGame.svg");
+      }
+
+      async function setup() {
+        await tf.setBackend("webgl");
+        await tf.ready();
+
+        createCanvas(windowWidth, windowHeight);
+        textFont(logoFont);
+        textAlign(CENTER, CENTER);
+        textSize(16);
+        imageMode(CENTER);
+
+        video = createCapture(VIDEO);
+        video.size(640, 480);
+        video.hide();
+
+        const detectorConfig = {
+          modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
+        };
+        detector = await poseDetection.createDetector(
+          poseDetection.SupportedModels.MoveNet,
+          detectorConfig
+        );
+
+        for (let x = 0; x < width; x += spacing) {
+          for (let y = 0; y < height; y += spacing) {
+            const chars = ["V", "C", "D"];
+            const char = random(chars);
+            points.push({
+              x,
+              y,
+              homeX: x,
+              homeY: y,
+              char,
+              alpha: 255,
+              offset: random(TWO_PI),
+            });
+          }
+        }
+      }
+
+      async function getPose() {
+        if (detector && video.loadedmetadata) {
+          poses = await detector.estimatePoses(video.elt, {
+            flipHorizontal: true,
+          });
+        }
+      }
+
+      function draw() {
+        background(0, 30);
+        getPose();
+
+        let handPoints = [];
+        if (poses.length > 0) {
+          const keypoints = poses[0].keypoints;
+          const leftWrist = keypoints.find((p) => p.name === "left_wrist");
+          const rightWrist = keypoints.find((p) => p.name === "right_wrist");
+          if (leftWrist && leftWrist.score > 0.5) handPoints.push(leftWrist);
+          if (rightWrist && rightWrist.score > 0.5) handPoints.push(rightWrist);
+        }
+
+        // 拖尾更新
+        for (let hp of handPoints) {
+          let bx = width - (hp.x * width) / video.width;
+          let by = (hp.y * height) / video.height;
+          trails.push({ x: bx, y: by, alpha: 255 });
+        }
+        for (let t of trails) {
+          fill(255, t.alpha * 0.9);
+          noStroke();
+          ellipse(t.x, t.y, 6);
+          t.alpha -= 4;
+        }
+        trails = trails.filter((t) => t.alpha > 0);
+
+        for (let p of points) {
+          // 每格落下如瀑布
+          p.y += fallSpeed;
+          if (p.y > height + spacing) {
+            p.y = -spacing;
+          }
+
+          // 揮手驅散效果（僅針對手部）
+          let repulsionX = 0;
+          let repulsionY = 0;
+          for (let hp of handPoints) {
+            let bx = width - (hp.x * width) / video.width;
+            let by = (hp.y * height) / video.height;
+            let dx = p.x - bx;
+            let dy = p.y - by;
+            let distSq = dx * dx + dy * dy;
+            if (distSq < 5000) {
+              let force = 5000 / distSq;
+              repulsionX += dx * force;
+              repulsionY += dy * force;
+            }
+          }
+          p.x += repulsionX * 0.01;
+          p.y += repulsionY * 0.01;
+
+          // 回歸原始 X
+          p.x += (p.homeX - p.x) * 0.01;
+
+          const wave = sin(frameCount * 0.05 + p.offset) * 5;
+          const alpha = 255;
+
+          fill(255, alpha);
+          noStroke();
+          text(p.char, p.x, p.y + wave);
+        }
+      }
+
+      function windowResized() {
+        resizeCanvas(windowWidth, windowHeight);
+        points = [];
+        for (let x = 0; x < width; x += spacing) {
+          for (let y = 0; y < height; y += spacing) {
+            const chars = ["V", "C", "D"];
+            const char = random(chars);
+            points.push({
+              x,
+              y,
+              homeX: x,
+              homeY: y,
+              char,
+              alpha: 255,
+              offset: random(TWO_PI),
+            });
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
