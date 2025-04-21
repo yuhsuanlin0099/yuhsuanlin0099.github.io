@@ -29,14 +29,15 @@
       const spacing = 18;
       let logoFont;
       let fallSpeed = 0.5;
-      let trails = []; // 拖尾粒子
-      let logoImage;
+      let trails = [];
+      let logoGreen;
+      let handsUp = false;
 
       function preload() {
         logoFont = loadFont(
           "https://cdnjs.cloudflare.com/ajax/libs/topcoat/0.8.0/font/SourceCodePro-Light.otf"
         );
-        logoImage = loadImage("logoGame.svg");
+        logoGreen = loadImage("logoGreen.png");
       }
 
       async function setup() {
@@ -61,6 +62,11 @@
           detectorConfig
         );
 
+        initializePoints();
+      }
+
+      function initializePoints() {
+        points = [];
         for (let x = 0; x < width; x += spacing) {
           for (let y = 0; y < height; y += spacing) {
             const chars = ["V", "C", "D"];
@@ -91,20 +97,48 @@
         getPose();
 
         let handPoints = [];
+        let currentHandsUp = false;
+
         if (poses.length > 0) {
           const keypoints = poses[0].keypoints;
           const leftWrist = keypoints.find((p) => p.name === "left_wrist");
           const rightWrist = keypoints.find((p) => p.name === "right_wrist");
-          if (leftWrist && leftWrist.score > 0.5) handPoints.push(leftWrist);
-          if (rightWrist && rightWrist.score > 0.5) handPoints.push(rightWrist);
+          const nose = keypoints.find((p) => p.name === "nose");
+
+          if (leftWrist && leftWrist.score > 0.3) handPoints.push(leftWrist);
+          if (rightWrist && rightWrist.score > 0.3) handPoints.push(rightWrist);
+
+          if (
+            leftWrist &&
+            rightWrist &&
+            nose &&
+            leftWrist.score > 0.3 &&
+            rightWrist.score > 0.3 &&
+            leftWrist.y < nose.y &&
+            rightWrist.y < nose.y
+          ) {
+            currentHandsUp = true;
+          }
         }
 
-        // 拖尾更新
+        if (currentHandsUp && logoGreen) {
+          handsUp = true;
+          let imgH = min(height / 3, logoGreen.height);
+          let imgW = logoGreen.width * (imgH / logoGreen.height);
+          background(255);
+          image(logoGreen, width / 2, height / 2, imgW, imgH);
+          return;
+        } else if (handsUp && !currentHandsUp) {
+          handsUp = false;
+          initializePoints();
+        }
+
         for (let hp of handPoints) {
           let bx = width - (hp.x * width) / video.width;
           let by = (hp.y * height) / video.height;
           trails.push({ x: bx, y: by, alpha: 255 });
         }
+
         for (let t of trails) {
           fill(255, t.alpha * 0.9);
           noStroke();
@@ -114,37 +148,34 @@
         trails = trails.filter((t) => t.alpha > 0);
 
         for (let p of points) {
-          // 每格落下如瀑布
-          p.y += fallSpeed;
-          if (p.y > height + spacing) {
-            p.y = -spacing;
-          }
+          p.y = (p.y + fallSpeed) % (height + spacing);
 
-          // 揮手驅散效果（僅針對手部）
           let repulsionX = 0;
           let repulsionY = 0;
           for (let hp of handPoints) {
             let bx = width - (hp.x * width) / video.width;
             let by = (hp.y * height) / video.height;
+            fill(255, 100);
+            noStroke();
+            ellipse(bx, by, 10);
+
             let dx = p.x - bx;
             let dy = p.y - by;
             let distSq = dx * dx + dy * dy;
-            if (distSq < 5000) {
-              let force = 5000 / distSq;
+            if (distSq < 15000) {
+              let force = 15000 / distSq;
               repulsionX += dx * force;
               repulsionY += dy * force;
             }
           }
           p.x += repulsionX * 0.01;
           p.y += repulsionY * 0.01;
-
-          // 回歸原始 X
           p.x += (p.homeX - p.x) * 0.01;
 
-          const wave = sin(frameCount * 0.05 + p.offset) * 5;
-          const alpha = 255;
-
-          fill(255, alpha);
+          const noiseOffset =
+            noise(p.x * 0.01, p.y * 0.01, frameCount * 0.01) * 10 - 5;
+          const wave = sin(frameCount * 0.05 + p.offset) * 5 + noiseOffset;
+          fill(255);
           noStroke();
           text(p.char, p.x, p.y + wave);
         }
@@ -152,22 +183,7 @@
 
       function windowResized() {
         resizeCanvas(windowWidth, windowHeight);
-        points = [];
-        for (let x = 0; x < width; x += spacing) {
-          for (let y = 0; y < height; y += spacing) {
-            const chars = ["V", "C", "D"];
-            const char = random(chars);
-            points.push({
-              x,
-              y,
-              homeX: x,
-              homeY: y,
-              char,
-              alpha: 255,
-              offset: random(TWO_PI),
-            });
-          }
-        }
+        initializePoints();
       }
     </script>
   </body>
