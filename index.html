@@ -6,6 +6,7 @@
     <title>AR 櫻花撥落｜上半身啟動（60 秒）</title>
 
     <!-- 只載一次：p5.js + ml5.js（ml5 0.12.2 內含 PoseNet/HandPose） -->
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
     <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
 
@@ -46,6 +47,9 @@
       <div>Tracks: <span id="trkState">—</span></div>
       <div>Size: <span id="vidSize">—</span></div>
     </div>
+    <!-- MediaPipe Hands（支援同時 2 手） -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.min.js"></script>
 
     <script src="app.js"></script>
   </body>
