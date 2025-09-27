@@ -1,0 +1,246 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Inter,
+    "Noto Sans TC", Arial;
+  overflow: hidden;
+}
+
+/* 實境背景（鏡像） */
+#camBg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: 0;
+  transform: scaleX(-1);
+  background: #000;
+}
+
+/* 除錯骨架（按 D 切換）與導引層（常顯） */
+#debugCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  display: none;
+}
+#guideCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* 遊戲層（櫻花 DOM） */
+.game-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+/* 分數特效層 */
+.fx-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* 花瓣容器（由 JS 控制 translate），子元素 <img> 執行旋轉/擺動動畫 */
+.petal {
+  position: absolute;
+  top: -120px;
+  left: 0;
+  width: 80px;
+  height: 80px;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25));
+  transform-origin: 50% 50%;
+  opacity: 0.95;
+}
+.petal.small {
+  width: 56px;
+  height: 56px;
+}
+.petal.large {
+  width: 96px;
+  height: 96px;
+}
+
+.petal img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transform-origin: 50% 50%;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+/* 兩種花瓣給不同的微動畫（旋轉/擺動/輕微傾斜） */
+.petal.p1 img {
+  animation-name: petalDrift1;
+}
+.petal.p2 img {
+  animation-name: petalDrift2;
+}
+
+/* 命中縮小消失 */
+.petal.hit {
+  transition: transform 220ms ease, opacity 220ms ease;
+  transform: scale(0.2) rotate(25deg);
+  opacity: 0;
+}
+
+/* HUD / 訊息 */
+#hud {
+  position: fixed;
+  right: 16px;
+  top: 12px;
+  display: grid;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  z-index: 6; /* 在 fx-layer 之上顯示 */
+}
+#hud .ok {
+  color: #2ecc71;
+  font-weight: 700;
+}
+#hud .warn {
+  color: #f1c40f;
+  font-weight: 700;
+}
+#hud .bad {
+  color: #e74c3c;
+  font-weight: 700;
+}
+
+#status {
+  font-weight: 700;
+}
+#message {
+  position: fixed;
+  left: 50%;
+  top: 55%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  padding: 16px 18px;
+  border-radius: 12px;
+  font-size: 18px;
+  display: none;
+  z-index: 6;
+  text-align: center;
+}
+
+/* 中央就緒圓環（0.7 秒） */
+#readyWrap {
+  position: fixed;
+  left: 50%;
+  top: 16vh;
+  transform: translateX(-50%);
+  z-index: 6;
+  text-align: center;
+}
+#readyText {
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  font-weight: 800;
+  margin-top: 10px;
+}
+#readyRing {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #e67e22 var(--deg, 0deg),
+    rgba(255, 255, 255, 0.25) 0deg
+  );
+  border: 8px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25);
+}
+
+/* 相機診斷面板 */
+#camDiag {
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  z-index: 7;
+  font: 12px/1.4 system-ui, -apple-system, Segoe UI, Roboto;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 8px 10px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+#camDiag .ok {
+  color: #2ecc71;
+  font-weight: 700;
+}
+#camDiag .bad {
+  color: #e74c3c;
+  font-weight: 700;
+}
+
+/* === 花瓣微動畫（持續搖擺，速度較慢，視覺更柔和） === */
+@keyframes petalDrift1 {
+  0% {
+    transform: rotate(-10deg) skewX(0.5deg);
+  }
+  50% {
+    transform: rotate(6deg) skewX(-1.5deg);
+  }
+  100% {
+    transform: rotate(14deg) skewX(0.5deg);
+  }
+}
+@keyframes petalDrift2 {
+  0% {
+    transform: rotate(12deg) skewY(0.5deg);
+  }
+  50% {
+    transform: rotate(-4deg) skewY(-1.5deg);
+  }
+  100% {
+    transform: rotate(-16deg) skewY(1deg);
+  }
+}
+
+/* === 得分特效（+1 浮起消散） === */
+.score-fx {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  color: #ffeb3b;
+  font-weight: 900;
+  font-size: 28px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: scorePop 800ms ease-out forwards;
+}
+@keyframes scorePop {
+  0% {
+    transform: translate(-50%, -30%) scale(0.6);
+    opacity: 0;
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -120%) scale(1);
+    opacity: 0;
+  }
+}
