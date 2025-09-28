@@ -1,56 +1,190 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AR 櫻花撥落｜上半身啟動（60 秒）</title>
-
-    <!-- 只載一次：p5.js + ml5.js（ml5 0.12.2 內含 PoseNet/HandPose） -->
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
-    <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
-
-    <link rel="stylesheet" href="styles.css" />
+    <meta charset="UTF-8" />
+    <title>VCD Interactive Art</title>
+    <link href="./favicon-32x32.png" rel="icon" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: black;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
   </head>
   <body>
-    <!-- 實境相機背景（鏡像） -->
-    <video id="camBg" autoplay playsinline webkit-playsinline muted></video>
+    <script>
+      let detector,
+        poses = [];
+      let video;
+      let points = [];
+      const spacing = 18;
+      let logoFont;
+      let fallSpeed = 0.5;
+      let trails = [];
+      let logoGreen;
+      let handsUp = false;
 
-    <!-- 除錯（D 鍵切換）與導引層（專門畫手掌圈等） -->
-    <canvas id="debugCanvas"></canvas>
-    <canvas id="guideCanvas"></canvas>
+      function preload() {
+        logoFont = loadFont(
+          "https://cdnjs.cloudflare.com/ajax/libs/topcoat/0.8.0/font/SourceCodePro-Light.otf"
+        );
+        logoGreen = loadImage("logoGreen.png");
+      }
 
-    <!-- 中央就緒提示（雙手舉過頭） -->
-    <div id="readyWrap">
-      <div id="readyRing" style="--deg: 0deg"></div>
-      <div id="readyText">雙手高舉過頭 0.7 秒即可開始</div>
-    </div>
+      async function setup() {
+        await tf.setBackend("webgl");
+        await tf.ready();
 
-    <!-- HUD（移除「命中」欄位） -->
-    <div id="hud">
-      <div id="status">狀態：啟動相機與模型…</div>
-      <div>分數：<span id="score">0</span></div>
-      <div>剩餘：<span id="timeLeft">60.0</span>s</div>
-      <div>姿勢：<span id="poseStatus">—</span></div>
-      <div>距離：<span id="distStatus">—</span></div>
-    </div>
-    <div id="message"></div>
+        createCanvas(windowWidth, windowHeight);
+        textFont(logoFont);
+        textAlign(CENTER, CENTER);
+        textSize(16);
+        imageMode(CENTER);
 
-    <!-- 櫻花與特效層 -->
-    <div class="game-layer" id="gameLayer"></div>
-    <div class="fx-layer" id="fxLayer"></div>
+        video = createCapture(VIDEO);
+        video.size(640, 480);
+        video.hide();
 
-    <!-- 相機診斷（需要時看） -->
-    <div id="camDiag" style="display: none">
-      <div>Camera: <span id="camState">—</span></div>
-      <div>Video: <span id="vidState">—</span></div>
-      <div>Tracks: <span id="trkState">—</span></div>
-      <div>Size: <span id="vidSize">—</span></div>
-    </div>
-    <!-- MediaPipe Hands（支援同時 2 手） -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.min.js"></script>
+        const detectorConfig = {
+          modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
+        };
+        detector = await poseDetection.createDetector(
+          poseDetection.SupportedModels.MoveNet,
+          detectorConfig
+        );
 
-    <script src="app.js"></script>
+        initializePoints();
+      }
+
+      function initializePoints() {
+        points = [];
+        for (let x = 0; x < width; x += spacing) {
+          for (let y = 0; y < height; y += spacing) {
+            const chars = ["V", "C", "D"];
+            const char = random(chars);
+            points.push({
+              x,
+              y,
+              homeX: x,
+              homeY: y,
+              char,
+              alpha: 255,
+              offset: random(TWO_PI),
+            });
+          }
+        }
+      }
+
+      async function getPose() {
+        if (detector && video.loadedmetadata) {
+          poses = await detector.estimatePoses(video.elt, {
+            flipHorizontal: true,
+          });
+        }
+      }
+
+      function draw() {
+        background(0, 30);
+        getPose();
+
+        let handPoints = [];
+        let currentHandsUp = false;
+
+        if (poses.length > 0) {
+          const keypoints = poses[0].keypoints;
+          const leftWrist = keypoints.find((p) => p.name === "left_wrist");
+          const rightWrist = keypoints.find((p) => p.name === "right_wrist");
+          const nose = keypoints.find((p) => p.name === "nose");
+
+          if (leftWrist && leftWrist.score > 0.3) handPoints.push(leftWrist);
+          if (rightWrist && rightWrist.score > 0.3) handPoints.push(rightWrist);
+
+          if (
+            leftWrist &&
+            rightWrist &&
+            nose &&
+            leftWrist.score > 0.3 &&
+            rightWrist.score > 0.3 &&
+            leftWrist.y < nose.y &&
+            rightWrist.y < nose.y
+          ) {
+            currentHandsUp = true;
+          }
+        }
+
+        if (currentHandsUp && logoGreen) {
+          handsUp = true;
+          let imgH = min(height / 3, logoGreen.height);
+          let imgW = logoGreen.width * (imgH / logoGreen.height);
+          background(255);
+          image(logoGreen, width / 2, height / 2, imgW, imgH);
+          return;
+        } else if (handsUp && !currentHandsUp) {
+          handsUp = false;
+          initializePoints();
+        }
+
+        for (let hp of handPoints) {
+          let bx = width - (hp.x * width) / video.width;
+          let by = (hp.y * height) / video.height;
+          trails.push({ x: bx, y: by, alpha: 255 });
+        }
+
+        for (let t of trails) {
+          fill(255, t.alpha * 0.9);
+          noStroke();
+          ellipse(t.x, t.y, 6);
+          t.alpha -= 4;
+        }
+        trails = trails.filter((t) => t.alpha > 0);
+
+        for (let p of points) {
+          p.y = (p.y + fallSpeed) % (height + spacing);
+
+          let repulsionX = 0;
+          let repulsionY = 0;
+          for (let hp of handPoints) {
+            let bx = width - (hp.x * width) / video.width;
+            let by = (hp.y * height) / video.height;
+            fill(255, 100);
+            noStroke();
+            ellipse(bx, by, 10);
+
+            let dx = p.x - bx;
+            let dy = p.y - by;
+            let distSq = dx * dx + dy * dy;
+            if (distSq < 15000) {
+              let force = 15000 / distSq;
+              repulsionX += dx * force;
+              repulsionY += dy * force;
+            }
+          }
+          p.x += repulsionX * 0.01;
+          p.y += repulsionY * 0.01;
+          p.x += (p.homeX - p.x) * 0.01;
+
+          const noiseOffset =
+            noise(p.x * 0.01, p.y * 0.01, frameCount * 0.01) * 10 - 5;
+          const wave = sin(frameCount * 0.05 + p.offset) * 5 + noiseOffset;
+          fill(255);
+          noStroke();
+          text(p.char, p.x, p.y + wave);
+        }
+      }
+
+      function windowResized() {
+        resizeCanvas(windowWidth, windowHeight);
+        initializePoints();
+      }
+    </script>
   </body>
 </html>
