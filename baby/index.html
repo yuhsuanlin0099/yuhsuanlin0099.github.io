@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>寶貝今天我哪裡不一樣</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <link href="./images/heart.png" rel="icon" />
+  </head>
+
+  <body>
+    <audio
+      id="backgroundMusic"
+      src="sound/music.mp3"
+      loop
+      autoplay
+      muted
+    ></audio>
+    <audio id="clickSound" src="sound/clicksounds.mp3" preload="auto"></audio>
+    <section id="page-1" class="page">
+      <div class="title-wrap">
+        <img class="title" id="title-img" src="images/logo.png" />
+
+        <img
+          class="start-btn"
+          id="startBtn"
+          src="images/start_normal.png"
+          onmouseover="this.src='images/start_hover.png'"
+          onmouseout="this.src='images/start_normal.png'"
+        />
+      </div>
+    </section>
+
+    <section id="page-video" class="page hidden">
+      <div id="player"></div>
+    </section>
+
+    <section id="page-2" class="page hidden">
+      <img class="page-logo" src="images/logo.png" />
+      <div class="panel">
+        <div id="typeText" class="typewriter"></div>
+        <span class="caret" id="caret"></span>
+
+        <div class="center-btn-2">
+          <img
+            id="toWheel"
+            class="next-btn"
+            src="images/check_active.png"
+            onmouseover="this.src='images/check_hover.png'"
+            onmouseout="this.src='images/check_active.png'"
+          />
+        </div>
+      </div>
+    </section>
+
+    <section id="page-2-5" class="page hidden">
+      <img class="page-logo" src="images/logo.png" />
+      <div class="panel">
+        <div class="input-container-2-5">
+          <input type="text" id="playerNameInput" placeholder="請輸入名稱" />
+        </div>
+
+        <div class="center-btn-2">
+          <img
+            id="confirmNameBtn"
+            class="next-btn"
+            src="images/check_active.png"
+            onmouseover="this.src='images/check_hover.png'"
+            onmouseout="this.src='images/check_active.png'"
+          />
+        </div>
+      </div>
+    </section>
+
+    <section id="page-3" class="page hidden">
+      <img class="page-logo" src="images/logo.png" />
+
+      <div class="carousel">
+        <div class="item"><img src="images/green.PNG" /></div>
+        <div class="item"><img src="images/yellow.PNG" /></div>
+        <div class="item"><img src="images/purple.PNG" /></div>
+        <div class="item"><img src="images/blue.PNG" /></div>
+
+        <button id="prev"></button>
+        <button id="next"></button>
+      </div>
+
+      <div id="hoverPreview" class="hover-box hidden">
+        <img id="hoverPreviewImg" src="" />
+      </div>
+
+      <div class="confirm">
+        <img
+          id="finalSelectBtn"
+          class="next-btn"
+          src="images/nextp.png"
+          onmouseover="this.src='images/nexth.png'"
+          onmouseout="this.src='images/nextp.png'"
+        />
+      </div>
+    </section>
+
+    <section id="page-game" class="page hidden">
+      <img class="page-logo" src="images/logo.png" />
+      <div id="q2-animation-container">
+        <img id="q2-animated-img" src="images/beauty.png" class="hidden" />
+      </div>
+      <div id="game-intro" class="panel intro-box">
+        <div id="intro-text" class="typewriter"></div>
+
+        <div class="center-btn-2">
+          <img
+            id="start-quiz-btn"
+            class="next-btn"
+            src="images/check_active.png"
+            onmouseover="this.src='images/check_hover.png'"
+            onmouseout="this.src='images/check_active.png'"
+          />
+        </div>
+      </div>
+
+      <div id="game-quiz" class="panel quiz-box hidden">
+        <img id="quiz-img" class="quiz-img" />
+        <div id="quiz-question" class="quiz-question"></div>
+        <div id="quiz-options" class="quiz-options"></div>
+
+        <div class="center-btn-2">
+          <img
+            id="confirm-quiz-btn"
+            class="next-btn"
+            src="images/check_active.png"
+            onmouseover="this.src='images/check_hover.png'"
+            onmouseout="this.src='images/check_active.png'"
+          />
+        </div>
+
+        <div class="q-counter">Question <span id="q-counter">1</span>/9</div>
+      </div>
+    </section>
+    <section id="page-transition" class="page hidden"></section>
+    <section id="page-result-high" class="page hidden">
+      <div class="panel result-panel">
+        <img class="page-logo result-logo" src="images/logo.png" />
+        <img
+          id="finalResultImageHigh"
+          class="result-image"
+          src=""
+          alt="完美結局圖片"
+        />
+
+        <div class="result-score">
+          <span class="final-score-display"></span>
+        </div>
+        <a
+          href="https://yuchi1217.github.io/babylove.github.io/"
+          target="_blank"
+          class="external-link-btn"
+        >
+          <img
+            src="images/learnmore_active.png"
+            onmouseover="this.src='images/learnmore_active.png'"
+            onmouseout="this.src='images/learnmore_hover.png'"
+            alt="外部連結"
+            class="external-img-final"
+          />
+        </a>
+
+        <img
+          class="retry-img-final"
+          src="images/return_active.png"
+          onmouseover="this.src='images/return_hover.png'"
+          onmouseout="this.src='images/return_active.png'"
+          onclick="location.reload()"
+          alt="再玩一次"
+        />
+      </div>
+    </section>
+
+    <section id="page-result-mid" class="page hidden">
+      <div class="panel result-panel">
+        <img class="page-logo result-logo" src="images/logo.png" />
+        <img
+          id="finalResultImageMid"
+          class="result-image"
+          src=""
+          alt="普通結局圖片"
+        />
+
+        <div class="result-score">
+          <span class="final-score-display"></span>
+        </div>
+        <a
+          href="https://yuchi1217.github.io/babylove.github.io/"
+          target="_blank"
+          class="external-link-btn"
+        >
+          <img
+            src="images/learnmore_active.png"
+            onmouseover="this.src='images/learnmore_hover.png'"
+            onmouseout="this.src='images/learnmore_active.png'"
+            alt="外部連結"
+            class="external-img-final"
+          />
+        </a>
+
+        <img
+          class="retry-img-final"
+          src="images/return_active.png"
+          onmouseover="this.src='images/return_hover.png'"
+          onmouseout="this.src='images/return_active.png'"
+          onclick="location.reload()"
+          alt="再玩一次"
+        />
+      </div>
+    </section>
+
+    <section id="page-result-low" class="page hidden">
+      <div class="panel result-panel">
+        <img class="page-logo result-logo" src="images/logo.png" />
+        <img
+          id="finalResultImageLow"
+          class="result-image"
+          src=""
+          alt="悲慘結局圖片"
+        />
+
+        <div class="result-score">
+          <span class="final-score-display"></span>
+        </div>
+        <a
+          href="https://yuchi1217.github.io/babylove.github.io/"
+          target="_blank"
+          class="external-link-btn"
+        >
+          <img
+            src="images/learnmore_active.png"
+            onmouseover="this.src='images/learnmore_hover.png'"
+            onmouseout="this.src='images/learnmore_active.png'"
+            alt="外部連結"
+            class="external-img-final"
+          />
+        </a>
+
+        <img
+          class="retry-img-final"
+          src="images/return_active.png"
+          onmouseover="this.src='images/return_hover.png'"
+          onmouseout="this.src='images/return_active.png'"
+          onclick="location.reload()"
+          alt="再玩一次"
+        />
+      </div>
+    </section>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
