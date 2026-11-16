@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -35,7 +35,7 @@
 
       function preload() {
         logoFont = loadFont(
-          "https://cdnjs.cloudflare.com/ajax/libs/topcoat/0.8.0/font/SourceCodePro-Light.otf"
+          "https://cdnjs.cloudflare.com/ajax/libs/topcoat/0.8.0/font/SourceCodePro-Light.otf",
         );
         logoGreen = loadImage("logoGreen.png");
       }
@@ -59,7 +59,7 @@
         };
         detector = await poseDetection.createDetector(
           poseDetection.SupportedModels.MoveNet,
-          detectorConfig
+          detectorConfig,
         );
 
         initializePoints();
